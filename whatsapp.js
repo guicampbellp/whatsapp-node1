@@ -20,7 +20,7 @@ const fs = require("fs-extra");
 
     // Configurações para ambiente de produção (Render)
     console.log("Chromium em:", process.env.PUPPETEER_EXECUTABLE_PATH);
-  const browser = await puppeteer.launch({
+    browser = await puppeteer.launch({
     headless: "new",
     args: [
       "--no-sandbox",
