@@ -2,6 +2,7 @@ const express = require('express');
 const { exec } = require('child_process');
 const path = require('path');
 const fs = require('fs-extra');
+const axios = require('axios'); // Adicione esta linha
 const app = express();
 
 app.use(express.json());
@@ -17,31 +18,60 @@ app.use((req, res, next) => {
 // Rota para processar PDF
 app.post('/processar-pdf', async (req, res) => {
   try {
-    const { pdfPath } = req.body;
+    const { pdfUrl } = req.body;
     
-    if (!pdfPath) {
-      return res.status(400).json({ error: 'Caminho do PDF não fornecido' });
+    if (!pdfUrl) {
+      return res.status(400).json({ error: 'URL do PDF não fornecida' });
     }
 
-    const fullPath = path.join(__dirname, '..', pdfPath);
+    // Cria uma pasta temporária se não existir
+    const tempDir = path.join(__dirname, 'temp');
+    await fs.ensureDir(tempDir);
     
-    if (!await fs.pathExists(fullPath)) {
-      return res.status(404).json({ error: 'Arquivo PDF não encontrado' });
+    // Define o caminho para o arquivo temporário
+    const tempPdfPath = path.join(tempDir, `temp_${Date.now()}.pdf`);
+    
+    try {
+      // Faz o download do PDF
+      const response = await axios({
+        method: 'get',
+        url: pdfUrl,
+        responseType: 'stream'
+      });
+      
+      const writer = fs.createWriteStream(tempPdfPath);
+      response.data.pipe(writer);
+      
+      await new Promise((resolve, reject) => {
+        writer.on('finish', resolve);
+        writer.on('error', reject);
+      });
+      
+      // Processa o PDF
+      exec(`node extrair.js "${tempPdfPath}"`, async (error, stdout, stderr) => {
+        // Limpa o arquivo temporário após o processamento
+        try {
+          await fs.remove(tempPdfPath);
+        } catch (cleanupError) {
+          console.error('Erro ao limpar arquivo temporário:', cleanupError);
+        }
+        
+        if (error) {
+          console.error('Erro ao processar PDF:', stderr);
+          return res.status(500).json({ error: 'Falha ao processar PDF' });
+        }
+
+        try {
+          const mensagens = await fs.readJson(path.join(__dirname, 'mensagem.json'));
+          res.json({ success: true, mensagens });
+        } catch (readError) {
+          res.status(500).json({ error: 'Erro ao ler mensagens geradas' });
+        }
+      });
+    } catch (downloadError) {
+      console.error('Erro ao baixar PDF:', downloadError);
+      return res.status(500).json({ error: 'Falha ao baixar PDF da URL fornecida' });
     }
-
-    exec(`node extrair.js "${fullPath}"`, async (error, stdout, stderr) => {
-      if (error) {
-        console.error('Erro ao processar PDF:', stderr);
-        return res.status(500).json({ error: 'Falha ao processar PDF' });
-      }
-
-      try {
-        const mensagens = await fs.readJson(path.join(__dirname, 'mensagem.json'));
-        res.json({ success: true, mensagens });
-      } catch (readError) {
-        res.status(500).json({ error: 'Erro ao ler mensagens geradas' });
-      }
-    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
