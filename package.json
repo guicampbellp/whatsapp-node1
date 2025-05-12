@@ -4,7 +4,7 @@
   "main": "api.js",
   "scripts": {
     "start": "node api.js",
-    "postinstall": "node install-puppeteer.js",
+    
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
