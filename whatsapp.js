@@ -35,7 +35,7 @@ const fs = require("fs-extra");
       ],
       executablePath: isProduction 
   ? await puppeteer.executablePath()
-  : "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+  : "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe", // Caminho local no Windows
       userDataDir: "./user_data",
       ignoreDefaultArgs: ["--enable-automation"],
     });
