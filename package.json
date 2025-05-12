@@ -4,16 +4,16 @@
   "main": "api.js",
   "scripts": {
     "start": "node api.js",
-    "install": "npm install puppeteer",
     "postinstall": "node install-puppeteer.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
     "axios": "^1.9.0",
+    "chrome-aws-lambda": "^10.1.0",
     "express": "^4.18.2",
     "fs-extra": "^11.2.0",
     "pdf-parse": "^1.1.1",
-    "puppeteer": "^24.8.2"
+    "puppeteer-core": "^10.4.0"
   },
   "engines": {
     "node": "18.x"

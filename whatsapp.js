@@ -4,7 +4,7 @@ const fs = require("fs-extra");
 (async () => {
   let browser;
   try {
-    const jsonFile = process.argv[2] || "mensagem.json";
+    const jsonFile = process.argv[2] || 'mensagem.json';
     
     if (!fs.existsSync(jsonFile)) {
       console.error(`Erro: Arquivo ${jsonFile} não encontrado!`);
@@ -14,22 +14,22 @@ const fs = require("fs-extra");
     const contatos = await fs.readJson(jsonFile);
 
     if (!contatos.length) {
-      console.error("Erro: Nenhuma mensagem encontrada no arquivo!");
+      console.error('Erro: Nenhuma mensagem encontrada no arquivo!');
       return;
     }
 
-    const browser = await puppeteer.launch({
-      headless: "new", // Usa o novo modo headless
+    // Configuração otimizada para Render
+    browser = await chromium.puppeteer.launch({
       args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--single-process"
+        ...chromium.args,
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--single-process'
       ],
-      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || 
-        (process.platform === 'win32' 
-          ? "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
-          : "/usr/bin/google-chrome-stable")
+      executablePath: await chromium.executablePath,
+      headless: true, // Sempre headless em produção
+      ignoreHTTPSErrors: true
     });
 
     const page = await browser.newPage();
