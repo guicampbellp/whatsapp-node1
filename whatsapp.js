@@ -21,16 +21,16 @@ const fs = require("fs-extra");
     // Configurações para ambiente de produção (Render)
     console.log("Chromium em:", process.env.PUPPETEER_EXECUTABLE_PATH);
     browser = await puppeteer.launch({
-    headless: "new",
-    args: [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage",
-      "--single-process"
-    ],
-    executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
-    ignoreHTTPSErrors: true,
-  });
+      headless: "new",
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--single-process"
+      ],
+      ignoreHTTPSErrors: true,
+      dumpio: false
+    });
 
     const page = await browser.newPage();
 
