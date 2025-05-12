@@ -22,6 +22,7 @@ const fs = require("fs-extra");
     console.log("Chromium em:", process.env.PUPPETEER_EXECUTABLE_PATH);
     browser = await puppeteer.launch({
       headless: "new",
+      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
@@ -29,8 +30,9 @@ const fs = require("fs-extra");
         "--single-process"
       ],
       ignoreHTTPSErrors: true,
-      dumpio: false
+      dumpio: false
     });
+    
 
     const page = await browser.newPage();
 
