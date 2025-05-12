@@ -33,12 +33,13 @@ browser = await puppeteer.launch({
     "--disable-gpu",
     "--single-process"
   ],
-  executablePath: isProduction
-    ? process.env.PUPPETEER_EXECUTABLE_PATH
+  executablePath: isProduction 
+    ? undefined // << permite Puppeteer usar o Chromium interno
     : "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
   userDataDir: "./user_data",
   ignoreDefaultArgs: ["--enable-automation"],
 });
+
 
     const page = await browser.newPage();
 
