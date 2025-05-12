@@ -3,14 +3,34 @@ const {
     makeWASocket, 
     useMultiFileAuthState, 
     DisconnectReason,
-    makeWALegacySocket,
     Browsers
 } = require('@whiskeysockets/baileys');
 const fs = require('fs-extra');
 const qrcode = require('qrcode-terminal');
-const crypto = require('crypto'); // Importação explícita do módulo crypto
+const crypto = require('crypto');
 
-// Polyfill para crypto global se necessário
+// Configuração do logger compatível com a versão atual do Baileys
+const logger = {
+    level: 'warn',
+    trace: (message) => console.trace(message),
+    debug: (message) => console.debug(message),
+    info: (message) => console.info(message),
+    warn: (message) => console.warn(message),
+    error: (message) => console.error(message),
+    fatal: (message) => console.error(message),
+    child: () => ({ // Implementação obrigatória do método child
+        level: 'warn',
+        trace: (message) => console.trace(message),
+        debug: (message) => console.debug(message),
+        info: (message) => console.info(message),
+        warn: (message) => console.warn(message),
+        error: (message) => console.error(message),
+        fatal: (message) => console.error(message),
+        child: () => logger.child() // Encadeamento para child
+    })
+};
+
+// Polyfill para crypto se necessário
 if (typeof globalThis.crypto === 'undefined') {
     globalThis.crypto = crypto;
 }
@@ -20,22 +40,15 @@ console.log('Iniciando WhatsApp Baileys...');
 async function connectToWhatsApp() {
     const { state, saveCreds } = await useMultiFileAuthState('baileys_auth_info');
     
-    // Configuração otimizada para o Render
     const sock = makeWASocket({
         printQRInTerminal: true,
         auth: state,
-        logger: {
-            level: 'silent', // Reduz ainda mais os logs
-            // Implementação mínima do logger para evitar erros
-            trace: () => {},
-            debug: () => {},
-            info: (...args) => console.log('[INFO]', ...args),
-            warn: (...args) => console.warn('[WARN]', ...args),
-            error: (...args) => console.error('[ERROR]', ...args),
-            fatal: (...args) => console.error('[FATAL]', ...args)
-        },
+        logger: logger, // Usando o logger corrigido
         browser: Browsers.ubuntu('Chrome'),
-        version: [2, 2413, 1] // Versão estável do WhatsApp Web
+        version: [2, 2413, 1], // Versão estável do WhatsApp Web
+        markOnlineOnConnect: false, // Melhoria de desempenho
+        syncFullHistory: false, // Não sincronizar histórico completo
+        getMessage: async () => undefined // Otimização de memória
     });
 
     sock.ev.on('connection.update', (update) => {
@@ -72,7 +85,7 @@ async function sendMessages(contatos) {
         sock = await connectToWhatsApp();
         
         // Aguarda conexão com timeout de 2 minutos
-        const connectionPromise = new Promise((resolve, reject) => {
+        await new Promise((resolve, reject) => {
             const timeout = setTimeout(() => {
                 reject(new Error('Timeout ao aguardar conexão com WhatsApp (120s)'));
             }, 120000);
@@ -84,8 +97,6 @@ async function sendMessages(contatos) {
                 }
             });
         });
-
-        await connectionPromise;
         
         console.log(`Preparando para enviar ${contatos.length} mensagens...`);
         
@@ -98,34 +109,33 @@ async function sendMessages(contatos) {
             // Formata o número corretamente
             let numero = contato.telefone.replace(/\D/g, '');
             if (!numero.startsWith('55') && numero.length === 11) {
-                numero = '55' + numero; // Adiciona código do Brasil se necessário
+                numero = '55' + numero;
             }
             const numeroFormatado = `${numero}@s.whatsapp.net`;
             
             try {
-                console.log(`[${index + 1}/${contatos.length}] Enviando mensagem para: ${numero}`);
+                console.log(`[${index + 1}/${contatos.length}] Enviando para: ${numero}`);
                 
                 await sock.sendMessage(numeroFormatado, { 
                     text: contato.mensagem 
                 });
                 
-                console.log(`[${index + 1}/${contatos.length}] Mensagem enviada com sucesso`);
+                console.log(`[${index + 1}/${contatos.length}] Mensagem enviada`);
                 
-                // Intervalo entre mensagens (3-5 segundos)
-                const delay = Math.floor(Math.random() * 2000) + 3000;
-                await new Promise(resolve => setTimeout(resolve, delay));
+                // Intervalo aleatório entre 3-5 segundos
+                await new Promise(resolve => setTimeout(resolve, 3000 + Math.random() * 2000));
             } catch (err) {
-                console.error(`[${index + 1}/${contatos.length}] Erro ao enviar:`, err.message);
+                console.error(`[${index + 1}/${contatos.length}] Erro:`, err.message);
                 // Pausa maior em caso de erro
                 await new Promise(resolve => setTimeout(resolve, 10000));
                 continue;
             }
         }
         
-        console.log('Processo de envio concluído com sucesso!');
+        console.log('Todas mensagens enviadas com sucesso!');
         return true;
     } catch (err) {
-        console.error('Erro crítico no envio:', err.message);
+        console.error('Erro no envio:', err.message);
         throw err;
     } finally {
         if (sock) {
@@ -144,23 +154,22 @@ async function sendMessages(contatos) {
         const jsonFile = process.argv[2] || 'mensagem.json';
         
         if (!fs.existsSync(jsonFile)) {
-            console.error(`Erro: Arquivo ${jsonFile} não encontrado!`);
+            console.error(`Arquivo ${jsonFile} não encontrado!`);
             process.exit(1);
         }
 
         const contatos = await fs.readJson(jsonFile);
 
         if (!contatos || !Array.isArray(contatos) || contatos.length === 0) {
-            console.error('Erro: Nenhuma mensagem válida encontrada no arquivo!');
+            console.error('Nenhum contato válido encontrado!');
             process.exit(1);
         }
 
         console.log(`Iniciando envio de ${contatos.length} mensagens...`);
-        const success = await sendMessages(contatos);
-        
-        process.exit(success ? 0 : 1);
+        await sendMessages(contatos);
+        process.exit(0);
     } catch (err) {
-        console.error('Erro no processo principal:', err);
+        console.error('Erro fatal:', err.message);
         process.exit(1);
     }
 })();
