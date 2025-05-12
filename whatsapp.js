@@ -22,21 +22,13 @@ const fs = require("fs-extra");
     const isProduction = process.env.NODE_ENV === 'production';
     
     browser = await puppeteer.launch({
-      headless: "new", // Usa o novo modo headless
+      headless: "new",
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--disable-accelerated-2d-canvas",
-        "--no-first-run",
-        "--no-zygote",
-        "--single-process"
+        "--disable-dev-shm-usage"
       ],
-      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || 
-        (process.platform === 'win32' 
-          ? "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe" 
-          : "/usr/bin/chromium-browser"),
-      userDataDir: "./user_data",
+      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
       ignoreDefaultArgs: ["--enable-automation"],
     });
 

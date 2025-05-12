@@ -9,3 +9,8 @@ npm install
 
 # Inicia a aplicação
 npm start
+
+#!/bin/bash
+# Verifica se o chromium está instalado
+which chromium
+ls -la /usr/bin/chromium
