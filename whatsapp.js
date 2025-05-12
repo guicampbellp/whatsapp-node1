@@ -34,8 +34,8 @@ const fs = require("fs-extra");
         "--single-process" // Para ambientes com recursos limitados
       ],
       executablePath: isProduction 
-        ? process.env.PUPPETEER_EXECUTABLE_PATH // Usa o Chrome do Puppeteer no Render
-        : "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe", // Caminho local no Windows
+  ? await puppeteer.executablePath()
+  : "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
       userDataDir: "./user_data",
       ignoreDefaultArgs: ["--enable-automation"],
     });
