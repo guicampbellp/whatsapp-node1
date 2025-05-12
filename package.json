@@ -4,7 +4,7 @@
   "main": "api.js",
   "scripts": {
     "start": "node api.js",
-    "install": "npm install && (if [ \"$NODE_ENV\" = \"production\" ]; then npm install puppeteer; fi)",
+    "install": "npm install puppeteer",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
