@@ -1,5 +1,6 @@
-const puppeteer = require("puppeteer");
-const fs = require("fs-extra");
+const chromium = require('chrome-aws-lambda');
+const puppeteer = require('puppeteer-core');
+const fs = require('fs-extra');
 
 (async () => {
   let browser;
@@ -19,7 +20,7 @@ const fs = require("fs-extra");
     }
 
     // Configuração otimizada para Render
-    browser = await chromium.puppeteer.launch({
+    browser = await puppeteer.launch({
       args: [
         ...chromium.args,
         '--no-sandbox',
@@ -28,7 +29,7 @@ const fs = require("fs-extra");
         '--single-process'
       ],
       executablePath: await chromium.executablePath,
-      headless: true, // Sempre headless em produção
+      headless: true,
       ignoreHTTPSErrors: true
     });
 
@@ -49,7 +50,7 @@ const fs = require("fs-extra");
       waitUntil: 'networkidle2',
       timeout: 60000 
     });
-    
+        
     console.log("Aguardando QR Code...");
     try {
       await page.waitForSelector("div[role='textbox']", { 
