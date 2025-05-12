@@ -22,15 +22,14 @@ const fs = require("fs-extra");
     console.log("Chromium em:", process.env.PUPPETEER_EXECUTABLE_PATH);
     browser = await puppeteer.launch({
       headless: "new",
-      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
+      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/google-chrome-stable',
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
         "--disable-dev-shm-usage",
         "--single-process"
       ],
-      ignoreHTTPSErrors: true,
-      dumpio: false
+      ignoreHTTPSErrors: true
     });
     
 
