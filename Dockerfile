@@ -1,7 +1,6 @@
-# Usa uma imagem Node.js oficial com versão compatível (18.x)
 FROM node:18-slim
 
-# 1. Instala as dependências do sistema necessárias para o Chromium
+# Instala dependências exatas para o Chromium no Render
 RUN apt-get update && \
     apt-get install -y \
     chromium \
@@ -27,39 +26,25 @@ RUN apt-get update && \
     libx11-6 \
     libx11-xcb1 \
     libxcb1 \
-    libxcomposite1 \
-    libxcursor1 \
-    libxdamage1 \
-    libxext6 \
-    libxfixes3 \
-    libxi6 \
-    libxrandr2 \
-    libxrender1 \
-    libxss1 \
-    libxtst6 \
-    lsb-release \
-    wget \
-    xdg-utils \
-    # Limpa o cache para reduzir o tamanho da imagem
     && rm -rf /var/lib/apt/lists/*
 
-# 2. Define o diretório de trabalho
 WORKDIR /app
 
-# 3. Copia os arquivos de dependência primeiro (otimização de cache Docker)
 COPY package.json package-lock.json ./
 
-# 4. Instala as dependências do Node.js
-RUN npm install
+# Instala dependências específicas para o Render
+RUN npm install --production && \
+    npm install puppeteer@19.11.1
 
-# 5. Copia todo o código fonte para o container
 COPY . .
 
-# 6. Define a variável de ambiente para o caminho do Chromium
+# Configurações específicas para o Render
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV NODE_ENV=production
+ENV DISABLE_SETUID_SANDBOX=1
+ENV NO_SANDBOX=1
 
-# 7. Expõe a porta que sua aplicação usa
 EXPOSE 3000
 
-# 8. Comando para iniciar a aplicação
 CMD ["npm", "start"]

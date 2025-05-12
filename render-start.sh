@@ -1,16 +1,18 @@
 #!/bin/bash
 
-# Configura variáveis de ambiente para o Puppeteer no Render
-export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-export PUPPETEER_EXECUTABLE_PATH=$(which chromium)
+# Verifica instalação do Chromium
+echo "Verificando instalação do Chromium..."
+ls -la /usr/bin/chromium
+which chromium
+chromium --version
 
-# Instala as dependências
+# Configurações específicas para o Render
+export PUPPETEER_EXECUTABLE_PATH=$(which chromium)
+export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+export NODE_ENV=production
+
+# Instala dependências
 npm install
 
 # Inicia a aplicação
 npm start
-
-#!/bin/bash
-# Verifica se o chromium está instalado
-which chromium
-ls -la /usr/bin/chromium

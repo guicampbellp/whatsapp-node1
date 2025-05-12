@@ -26,10 +26,15 @@ const fs = require("fs-extra");
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage"
+        "--disable-dev-shm-usage",
+        "--single-process"
       ],
-      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
-      ignoreDefaultArgs: ["--enable-automation"],
+      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || 
+        (process.platform === 'win32' 
+          ? "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe" 
+          : "/usr/bin/chromium"),
+      ignoreHTTPSErrors: true,
+      dumpio: false // Mude para true para ver logs detalhados se necessário
     });
 
     const page = await browser.newPage();

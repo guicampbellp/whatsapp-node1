@@ -18,6 +18,10 @@
     "node": "18.x"
   },
   "puppeteer": {
-    "product": "chrome"
+    "product": "chrome",
+    "args": [
+      "--no-sandbox",
+      "--disable-setuid-sandbox"
+    ]
   }
 }
