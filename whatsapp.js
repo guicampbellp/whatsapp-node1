@@ -6,14 +6,26 @@ const qrcode = require('qrcode-terminal');
 
 console.log('Iniciando WhatsApp Baileys...');
 
+// Configuração do logger personalizado para evitar o erro
+const logger = {
+    level: 'warn',
+    trace: () => {},
+    debug: () => {},
+    info: console.log,
+    warn: console.warn,
+    error: console.error,
+    fatal: console.error
+};
+
 async function connectToWhatsApp() {
   const { state, saveCreds } = await useMultiFileAuthState('baileys_auth_info');
   
   const sock = makeWASocket({
     printQRInTerminal: true,
     auth: state,
-    logger: { level: 'warn' }, // Reduz logs para evitar poluição
-    browser: ['WhatsApp Node API', 'Chrome', '1.0.0']
+    logger: logger, // Usando o logger corrigido
+    browser: ['WhatsApp Node API', 'Chrome', '1.0.0'],
+    markOnlineOnConnect: false // Adicionado para melhorar a estabilidade
   });
 
   sock.ev.on('connection.update', (update) => {
@@ -29,7 +41,7 @@ async function connectToWhatsApp() {
       console.log(`Conexão fechada, ${shouldReconnect ? 'reconectando...' : 'faça login novamente.'}`);
       
       if (shouldReconnect) {
-        connectToWhatsApp();
+        setTimeout(connectToWhatsApp, 5000); // Adicionado delay para reconexão
       }
     } else if (connection === 'open') {
       console.log('Conectado com sucesso ao WhatsApp!');
@@ -47,8 +59,16 @@ async function sendMessages(contatos) {
     
     // Aguarda conexão estar pronta
     await new Promise((resolve) => {
+      const timeout = setTimeout(() => {
+        console.error('Tempo excedido aguardando conexão');
+        resolve();
+      }, 60000); // Timeout de 1 minuto
+
       sock.ev.on('connection.update', (update) => {
-        if (update.connection === 'open') resolve();
+        if (update.connection === 'open') {
+          clearTimeout(timeout);
+          resolve();
+        }
       });
     });
     
@@ -60,8 +80,11 @@ async function sendMessages(contatos) {
         continue;
       }
       
-      // Formata o número para o padrão internacional (sem +)
+      // Formata o número para o padrão internacional (com código do país)
       const numero = contato.telefone.replace(/\D/g, '');
+      if (!numero.startsWith('55') && numero.length === 11) {
+        numero = '55' + numero; // Adiciona código do Brasil se não tiver
+      }
       const numeroFormatado = `${numero}@s.whatsapp.net`;
       
       try {
@@ -74,7 +97,7 @@ async function sendMessages(contatos) {
         console.log(`Mensagem enviada para: ${numero}`);
         
         // Intervalo entre mensagens para evitar bloqueio
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise(resolve => setTimeout(resolve, 2500));
       } catch (err) {
         console.error(`Erro ao enviar mensagem para ${numero}:`, err.message);
         continue;
@@ -82,8 +105,10 @@ async function sendMessages(contatos) {
     }
     
     console.log('Processo de envio concluído!');
+    process.exit(0); // Encerra o processo após conclusão
   } catch (err) {
     console.error('Erro crítico:', err.message);
+    process.exit(1);
   }
 }
 
@@ -93,18 +118,19 @@ async function sendMessages(contatos) {
     
     if (!fs.existsSync(jsonFile)) {
       console.error(`Erro: Arquivo ${jsonFile} não encontrado!`);
-      return;
+      process.exit(1);
     }
 
     const contatos = await fs.readJson(jsonFile);
 
     if (!contatos.length) {
       console.error('Erro: Nenhuma mensagem encontrada no arquivo!');
-      return;
+      process.exit(1);
     }
 
     await sendMessages(contatos);
   } catch (err) {
     console.error('Erro ao processar arquivo:', err.message);
+    process.exit(1);
   }
 })();
