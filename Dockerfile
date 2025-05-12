@@ -1,37 +1,49 @@
 FROM node:18-slim
 
-# 1. Instala apenas as dependências do sistema necessárias
+# 1. Instala o Chromium diretamente dos repositórios do Debian
 RUN apt-get update && \
     apt-get install -y \
-    wget \
-    gnupg \
-    && wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
-    && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list \
-    && apt-get update \
-    && apt-get install -y google-chrome-stable \
+    chromium \
+    fonts-liberation \
+    libasound2 \
+    libatk-bridge2.0-0 \
+    libatk1.0-0 \
+    libc6 \
+    libcairo2 \
+    libcups2 \
+    libdbus-1-3 \
+    libexpat1 \
+    libfontconfig1 \
+    libgbm1 \
+    libgcc1 \
+    libglib2.0-0 \
+    libgtk-3-0 \
+    libnspr4 \
+    libnss3 \
+    libpango-1.0-0 \
+    libpangocairo-1.0-0 \
+    libstdc++6 \
+    libx11-6 \
+    libx11-xcb1 \
+    libxcb1 \
     && rm -rf /var/lib/apt/lists/*
 
-# 2. Define o diretório de trabalho
 WORKDIR /app
 
-# 3. Copia os arquivos de dependência primeiro
 COPY package.json package-lock.json ./
 
-# 4. Instala as dependências do Node.js (SEM instalação automática do Chromium)
-RUN npm install --production --ignore-scripts
+# 2. Instala as dependências do Node.js
+RUN npm install --production
 
-# 5. Copia todo o código fonte
 COPY . .
 
-# 6. Configurações de ambiente
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
+# 3. Configurações de ambiente (usando chromium-browser)
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV NODE_ENV=production
 ENV DISABLE_SETUID_SANDBOX=1
 ENV NO_SANDBOX=1
 
-# 7. Porta da aplicação
 EXPOSE 3000
 
-# 8. Comando de inicialização
 CMD ["npm", "start"]

@@ -19,18 +19,23 @@ const fs = require("fs-extra");
     }
 
     // Configurações para ambiente de produção (Render)
-    console.log("Chromium em:", process.env.PUPPETEER_EXECUTABLE_PATH);
-    browser = await puppeteer.launch({
-      headless: "new",
-      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/google-chrome-stable',
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--single-process"
-      ],
-      ignoreHTTPSErrors: true
-    });
+    // Adicione no início do arquivo, antes do (async () => {
+console.log('Verificando caminho do Chromium...');
+console.log('Caminho configurado:', process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium');
+
+// Modifique a configuração do puppeteer.launch
+browser = await puppeteer.launch({
+  headless: "new",
+  executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium',
+  args: [
+    "--no-sandbox",
+    "--disable-setuid-sandbox",
+    "--disable-dev-shm-usage",
+    "--single-process"
+  ],
+  ignoreHTTPSErrors: true,
+  dumpio: true // Ativa logs detalhados
+});
     
 
     const page = await browser.newPage();
