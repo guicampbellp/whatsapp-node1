@@ -78,6 +78,7 @@ app.post('/processar-pdf', async (req, res) => {
 });
 
 // Rota para enviar mensagens
+// Rota para enviar mensagens
 app.post('/enviar-mensagens', async (req, res) => {
   try {
     const { pacientes, tipo_mensagem } = req.body;
@@ -89,19 +90,32 @@ app.post('/enviar-mensagens', async (req, res) => {
     const mensagemPath = path.join(__dirname, 'mensagem_selecionados.json');
     await fs.writeJson(mensagemPath, pacientes);
     
-    exec('node whatsapp.js mensagem_selecionados.json', (error, stdout, stderr) => {
-      if (error) {
-        console.error('Erro ao enviar mensagens:', stderr);
-        return res.status(500).json({ error: 'Falha ao enviar mensagens' });
-      }
-      
-      res.json({ 
-        success: true,
-        output: stdout,
-        message: `${pacientes.length} mensagens processadas`,
-        tipo: tipo_mensagem || 'confirmacao'
-      });
+    const child = exec('node whatsapp.js mensagem_selecionados.json', 
+      (error, stdout, stderr) => {
+        if (error) {
+          console.error('Erro ao enviar mensagens:', stderr);
+          return res.status(500).json({ 
+            error: 'Falha ao enviar mensagens',
+            details: stderr
+          });
+        }
+        
+        res.json({ 
+          success: true,
+          output: stdout,
+          message: `${pacientes.length} mensagens processadas`,
+          tipo: tipo_mensagem || 'confirmacao'
+        });
     });
+
+    // Captura logs em tempo real
+    child.stdout.on('data', (data) => {
+      console.log(`WhatsApp: ${data}`);
+    });
+    child.stderr.on('data', (data) => {
+      console.error(`WhatsApp ERROR: ${data}`);
+    });
+
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

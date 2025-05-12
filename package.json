@@ -4,6 +4,7 @@
   "main": "api.js",
   "scripts": {
     "start": "node api.js",
+    "install": "npm install && (if [ \"$NODE_ENV\" = \"production\" ]; then npm install puppeteer; fi)",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
@@ -11,7 +12,7 @@
     "express": "^4.18.2",
     "fs-extra": "^11.2.0",
     "pdf-parse": "^1.1.1",
-    "puppeteer": "^21.9.0"
+    "puppeteer": "^22.6.0"
   },
   "engines": {
     "node": "18.x"
