@@ -1,11 +1,10 @@
-const chromium = require('chrome-aws-lambda');
-const puppeteer = require('puppeteer-core');
-const fs = require('fs-extra');
+const puppeteer = require("puppeteer");
+const fs = require("fs-extra");
 
 (async () => {
   let browser;
   try {
-    const jsonFile = process.argv[2] || 'mensagem.json';
+    const jsonFile = process.argv[2] || "mensagem.json";
     
     if (!fs.existsSync(jsonFile)) {
       console.error(`Erro: Arquivo ${jsonFile} não encontrado!`);
@@ -15,22 +14,30 @@ const fs = require('fs-extra');
     const contatos = await fs.readJson(jsonFile);
 
     if (!contatos.length) {
-      console.error('Erro: Nenhuma mensagem encontrada no arquivo!');
+      console.error("Erro: Nenhuma mensagem encontrada no arquivo!");
       return;
     }
 
-    // Configuração otimizada para Render
+    // Configurações para ambiente de produção (Render)
+    const isProduction = process.env.NODE_ENV === 'production';
+    
     browser = await puppeteer.launch({
+      headless: isProduction, // true no Render, false localmente
       args: [
-        ...chromium.args,
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--single-process'
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-accelerated-2d-canvas",
+        "--no-first-run",
+        "--no-zygote",
+        "--disable-gpu",
+        "--single-process" // Para ambientes com recursos limitados
       ],
-      executablePath: await chromium.executablePath,
-      headless: true,
-      ignoreHTTPSErrors: true
+      executablePath: isProduction 
+        ? process.env.PUPPETEER_EXECUTABLE_PATH // Usa o Chrome do Puppeteer no Render
+        : "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe", // Caminho local no Windows
+      userDataDir: "./user_data",
+      ignoreDefaultArgs: ["--enable-automation"],
     });
 
     const page = await browser.newPage();
@@ -50,7 +57,7 @@ const fs = require('fs-extra');
       waitUntil: 'networkidle2',
       timeout: 60000 
     });
-        
+    
     console.log("Aguardando QR Code...");
     try {
       await page.waitForSelector("div[role='textbox']", { 
