@@ -1,32 +1,40 @@
 const { Boom } = require('@hapi/boom');
-const { makeWASocket, useMultiFileAuthState, DisconnectReason } = require('@whiskeysockets/baileys');
+const { makeWASocket, useMultiFileAuthState, DisconnectReason, default: makeWALegacySocket } = require('@whiskeysockets/baileys');
 const fs = require('fs-extra');
-const path = require('path');
 const qrcode = require('qrcode-terminal');
 
 console.log('Iniciando WhatsApp Baileys...');
 
-// Configuração do logger personalizado para evitar o erro
-const logger = {
-    level: 'warn',
-    trace: () => {},
-    debug: () => {},
-    info: console.log,
-    warn: console.warn,
-    error: console.error,
-    fatal: console.error
-};
+// Solução 1: Usar makeWALegacySocket que é mais estável
+// Solução 2: Implementar um logger compatível
 
 async function connectToWhatsApp() {
   const { state, saveCreds } = await useMultiFileAuthState('baileys_auth_info');
   
+  // Opção 1: Usar makeWALegacySocket (recomendado para maior estabilidade)
+  const sock = makeWALegacySocket({
+    printQRInTerminal: true,
+    auth: state,
+    browser: ['WhatsApp Node API', 'Chrome', '1.0.0']
+  });
+
+  // Opção 2: Se quiser usar makeWASocket, use este logger compatível
+  /*
   const sock = makeWASocket({
     printQRInTerminal: true,
     auth: state,
-    logger: logger, // Usando o logger corrigido
-    browser: ['WhatsApp Node API', 'Chrome', '1.0.0'],
-    markOnlineOnConnect: false // Adicionado para melhorar a estabilidade
+    logger: {
+      level: 'warn',
+      trace: () => {},
+      debug: () => {},
+      info: (...args) => console.log(...args),
+      warn: (...args) => console.warn(...args),
+      error: (...args) => console.error(...args),
+      fatal: (...args) => console.error(...args)
+    },
+    browser: ['WhatsApp Node API', 'Chrome', '1.0.0']
   });
+  */
 
   sock.ev.on('connection.update', (update) => {
     const { connection, lastDisconnect, qr } = update;
@@ -41,7 +49,7 @@ async function connectToWhatsApp() {
       console.log(`Conexão fechada, ${shouldReconnect ? 'reconectando...' : 'faça login novamente.'}`);
       
       if (shouldReconnect) {
-        setTimeout(connectToWhatsApp, 5000); // Adicionado delay para reconexão
+        setTimeout(connectToWhatsApp, 5000);
       }
     } else if (connection === 'open') {
       console.log('Conectado com sucesso ao WhatsApp!');
@@ -54,15 +62,15 @@ async function connectToWhatsApp() {
 }
 
 async function sendMessages(contatos) {
+  let sock;
   try {
-    const sock = await connectToWhatsApp();
+    sock = await connectToWhatsApp();
     
-    // Aguarda conexão estar pronta
-    await new Promise((resolve) => {
+    // Aguarda conexão estar pronta com timeout
+    await new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
-        console.error('Tempo excedido aguardando conexão');
-        resolve();
-      }, 60000); // Timeout de 1 minuto
+        reject(new Error('Timeout ao aguardar conexão com WhatsApp'));
+      }, 60000);
 
       sock.ev.on('connection.update', (update) => {
         if (update.connection === 'open') {
@@ -80,35 +88,38 @@ async function sendMessages(contatos) {
         continue;
       }
       
-      // Formata o número para o padrão internacional (com código do país)
-      const numero = contato.telefone.replace(/\D/g, '');
+      // Formata o número corretamente
+      let numero = contato.telefone.replace(/\D/g, '');
       if (!numero.startsWith('55') && numero.length === 11) {
-        numero = '55' + numero; // Adiciona código do Brasil se não tiver
+        numero = '55' + numero; // Adiciona código do Brasil se necessário
       }
       const numeroFormatado = `${numero}@s.whatsapp.net`;
       
       try {
         console.log(`Enviando mensagem para: ${numero}`);
         
-        await sock.sendMessage(numeroFormatado, {
-          text: contato.mensagem
-        });
+        await sock.sendMessage(numeroFormatado, { text: contato.mensagem });
         
         console.log(`Mensagem enviada para: ${numero}`);
         
-        // Intervalo entre mensagens para evitar bloqueio
+        // Intervalo entre mensagens
         await new Promise(resolve => setTimeout(resolve, 2500));
       } catch (err) {
-        console.error(`Erro ao enviar mensagem para ${numero}:`, err.message);
+        console.error(`Erro ao enviar para ${numero}:`, err.message);
         continue;
       }
     }
     
     console.log('Processo de envio concluído!');
-    process.exit(0); // Encerra o processo após conclusão
   } catch (err) {
     console.error('Erro crítico:', err.message);
-    process.exit(1);
+    throw err;
+  } finally {
+    if (sock) {
+      setTimeout(() => {
+        sock.end(undefined);
+      }, 5000);
+    }
   }
 }
 
@@ -129,8 +140,9 @@ async function sendMessages(contatos) {
     }
 
     await sendMessages(contatos);
+    process.exit(0);
   } catch (err) {
-    console.error('Erro ao processar arquivo:', err.message);
+    console.error('Erro no processo principal:', err.message);
     process.exit(1);
   }
 })();
