@@ -29,12 +29,8 @@ const fs = require("fs-extra");
         "--disable-dev-shm-usage",
         "--single-process"
       ],
-      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || 
-        (process.platform === 'win32' 
-          ? "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe" 
-          : "/usr/bin/chromium"),
+      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
       ignoreHTTPSErrors: true,
-      dumpio: false // Mude para true para ver logs detalhados se necessário
     });
 
     const page = await browser.newPage();

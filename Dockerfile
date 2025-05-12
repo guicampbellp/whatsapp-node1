@@ -3,7 +3,7 @@ FROM node:18-slim
 # Instala dependências exatas para o Chromium no Render
 RUN apt-get update && \
     apt-get install -y \
-    chromium \
+    chromium-browser\
     fonts-liberation \
     libasound2 \
     libatk-bridge2.0-0 \
@@ -39,7 +39,7 @@ RUN npm install --production && \
 COPY . .
 
 # Configurações específicas para o Render
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV NODE_ENV=production
 ENV DISABLE_SETUID_SANDBOX=1
