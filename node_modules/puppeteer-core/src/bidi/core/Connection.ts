@@ -115,6 +115,11 @@ export interface Commands {
     returnType: Bidi.EmptyResult;
   };
 
+  'emulation.setGeolocationOverride': {
+    params: Bidi.Emulation.SetGeolocationOverrideParameters;
+    returnType: Bidi.EmptyResult;
+  };
+
   'permissions.setPermission': {
     params: Bidi.Permissions.SetPermissionParameters;
     returnType: Bidi.EmptyResult;
@@ -178,6 +183,14 @@ export interface Commands {
     params: Bidi.Network.ProvideResponseParameters;
     returnType: Bidi.EmptyResult;
   };
+  'webExtension.install': {
+    params: Bidi.WebExtension.InstallParameters;
+    returnType: Bidi.WebExtension.InstallResult;
+  };
+  'webExtension.uninstall': {
+    params: Bidi.WebExtension.UninstallParameters;
+    returnType: Bidi.EmptyResult;
+  };
 }
 
 /**
@@ -197,6 +210,6 @@ export interface Connection<Events extends BidiEvents = BidiEvents>
   extends EventEmitter<Events> {
   send<T extends keyof Commands>(
     method: T,
-    params: Commands[T]['params']
+    params: Commands[T]['params'],
   ): Promise<{result: Commands[T]['returnType']}>;
 }
