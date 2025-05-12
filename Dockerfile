@@ -40,6 +40,7 @@ COPY . .
 
 # Configurações específicas para o Render
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV NODE_ENV=production
 ENV DISABLE_SETUID_SANDBOX=1
 ENV NO_SANDBOX=1
