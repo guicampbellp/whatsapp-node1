@@ -1,5 +1,6 @@
 const puppeteer = require("puppeteer");
 const fs = require("fs-extra");
+const path = require("path");
 
 (async () => {
   let browser;
@@ -12,35 +13,31 @@ const fs = require("fs-extra");
     }
 
     const contatos = await fs.readJson(jsonFile);
-
     if (!contatos.length) {
       console.error("Erro: Nenhuma mensagem encontrada no arquivo!");
       return;
     }
 
-    // Configurações para ambiente de produção (Render)
-    const isProduction = process.env.NODE_ENV === 'production';
+    // Caminho do Chromium instalado via Puppeteer
+    const chromiumPath = puppeteer.executablePath();
 
-browser = await puppeteer.launch({
-  headless: isProduction,
-  args: [
-    "--no-sandbox",
-    "--disable-setuid-sandbox",
-    "--disable-dev-shm-usage",
-    "--disable-accelerated-2d-canvas",
-    "--no-first-run",
-    "--no-zygote",
-    "--disable-gpu",
-    "--single-process"
-  ],
-  executablePath: isProduction 
-    ? undefined // << permite Puppeteer usar o Chromium interno
-    : "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
-  userDataDir: "./user_data",
-  ignoreDefaultArgs: ["--enable-automation"],
-});
-
-
+    browser = await puppeteer.launch({
+      headless: true,
+      executablePath: chromiumPath,
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-accelerated-2d-canvas",
+        "--no-first-run",
+        "--no-zygote",
+        "--disable-gpu",
+        "--single-process"
+      ],
+      userDataDir: "./user_data",
+      ignoreDefaultArgs: ["--enable-automation"],
+    });
+    console.log("Chromium path:", chromiumPath);
     const page = await browser.newPage();
 
     // Configurações avançadas para evitar detecção
