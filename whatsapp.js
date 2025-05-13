@@ -1,5 +1,6 @@
 const puppeteer = require("puppeteer");
 const fs = require("fs-extra");
+require("dotenv").config();
 
 (async () => {
   let browser;
@@ -18,19 +19,17 @@ const fs = require("fs-extra");
       console.log(await fs.readdir('/opt/render/.cache/puppeteer/chrome/linux-136.0.7103.92/'));
     }
 
-    browser = await puppeteer.launch({
-      headless: 'new',
+    const browser = await puppeteer.launch({
       args: [
-        "--no-sandbox",
         "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--disable-accelerated-2d-canvas",
-        "--no-first-run",
+        "--no-sandbox",
+        "--single-process",
         "--no-zygote",
-        "--disable-gpu"
       ],
-      executablePath: chromePath,
-      ignoreDefaultArgs: ["--enable-automation"],
+      executablePath:
+        process.env.NODE_ENV === "production"
+          ? process.env.PUPPETEER_EXECUTABLE_PATH
+          : puppeteer.executablePath(),
     });
 
     const page = await browser.newPage();

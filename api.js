@@ -78,7 +78,6 @@ app.post('/processar-pdf', async (req, res) => {
 });
 
 // Rota para enviar mensagens
-// Rota para enviar mensagens
 app.post('/enviar-mensagens', async (req, res) => {
   try {
     const { pacientes, tipo_mensagem } = req.body;
