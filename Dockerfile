@@ -1,13 +1,9 @@
 FROM node:18-slim
 
-# 1. Instala dependências do sistema
-RUN apt-get update && apt-get install -y \
-    wget gnupg && \
-    wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - && \
-    echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list && \
-    apt-get update && \
+# 1. Instala o Chromium diretamente dos repositórios Debian
+RUN apt-get update && \
     apt-get install -y \
-    google-chrome-stable \
+    chromium \
     fonts-liberation \
     libasound2 \
     libatk-bridge2.0-0 \
@@ -35,23 +31,24 @@ RUN apt-get update && apt-get install -y \
     libxext6 \
     libxfixes3 \
     libxrandr2 \
-    libxshmfence1 && \
-    rm -rf /var/lib/apt/lists/*
+    libxshmfence1 \
+    && rm -rf /var/lib/apt/lists/*
 
-# 2. Cria link simbólico para o Chrome instalado
-RUN ln -s /usr/bin/google-chrome-stable /usr/bin/chromium
+# 2. Cria diretório de cache do Puppeteer
+RUN mkdir -p /opt/render/.cache/puppeteer && \
+    chmod -R 777 /opt/render/.cache
 
 WORKDIR /app
 
 COPY package.json package-lock.json ./
 
-RUN npm install
+# 3. Instala dependências (ignorando download do Chromium)
+RUN PUPPETEER_SKIP_DOWNLOAD=true npm install
 
 COPY . .
 
-# 3. Configurações de ambiente
+# 4. Configurações de ambiente
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV NODE_ENV=production
 
 EXPOSE 3000
