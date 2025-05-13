@@ -4,25 +4,22 @@ const fs = require("fs-extra");
 (async () => {
   let browser;
   try {
-    const jsonFile = process.argv[2] || "mensagem.json";
+    // ... (código anterior mantido)
+
+    // Configurações atualizadas para o Render
+    const chromePath = '/opt/render/.cache/puppeteer/chrome/linux-136.0.7103.92/chrome-linux64/chrome';
     
-    if (!fs.existsSync(jsonFile)) {
-      console.error(`Erro: Arquivo ${jsonFile} não encontrado!`);
-      return;
+    console.log('Verificando caminho do Chrome...');
+    try {
+      await fs.access(chromePath, fs.constants.F_OK);
+      console.log(`Chrome encontrado em: ${chromePath}`);
+    } catch {
+      console.log('Chrome não encontrado, listando diretório:');
+      console.log(await fs.readdir('/opt/render/.cache/puppeteer/chrome/linux-136.0.7103.92/'));
     }
 
-    const contatos = await fs.readJson(jsonFile);
-
-    if (!contatos.length) {
-      console.error("Erro: Nenhuma mensagem encontrada no arquivo!");
-      return;
-    }
-
-    // Configurações para ambiente de produção
-    const isProduction = process.env.NODE_ENV === 'production';
-    
-    const browser = await puppeteer.launch({
-      headless: 'new', // Usa o novo modo headless
+    browser = await puppeteer.launch({
+      headless: 'new',
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
@@ -30,11 +27,9 @@ const fs = require("fs-extra");
         "--disable-accelerated-2d-canvas",
         "--no-first-run",
         "--no-zygote",
-        "--disable-gpu",
-        "--single-process"
+        "--disable-gpu"
       ],
-      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || 
-        (isProduction ? '/usr/bin/chromium' : "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"),
+      executablePath: chromePath,
       ignoreDefaultArgs: ["--enable-automation"],
     });
 

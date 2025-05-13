@@ -2,11 +2,10 @@
   "name": "meu-projeto-whatsapp",
   "version": "1.0.0",
   "main": "api.js",
-  "scripts": {
+"scripts": {
     "postinstall": "npx puppeteer browsers install chrome",
     "start": "node api.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "test-chromium": "node test-chromium.js",
+    "test-chromium": "node -e \"require('fs').access('/opt/render/.cache/puppeteer/chrome/linux-136.0.7103.92/chrome-linux64/chrome', (err) => console.log(err ? 'Chrome não encontrado' : 'Chrome encontrado'))\"",
     "prestart": "npm run test-chromium"
   },
   "dependencies": {
