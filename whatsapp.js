@@ -5,9 +5,6 @@ require("dotenv").config();
 (async () => {
   let browser;
   try {
-    // ... (código anterior mantido)
-
-    // Configurações atualizadas para o Render
     const chromePath = '/opt/render/.cache/puppeteer/chrome/linux-136.0.7103.92/chrome-linux64/chrome';
     
     console.log('Verificando caminho do Chrome...');
