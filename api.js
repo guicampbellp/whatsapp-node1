@@ -49,27 +49,35 @@ app.post('/processar-pdf', async (req, res) => {
       });
       
       // Processa o PDF
-      exec(`node extrair.js "${tempPdfPath}"`, async (error, stdout, stderr) => {
-        // Limpa o arquivo temporário após o processamento
-        try {
-          await fs.remove(tempPdfPath);
-        } catch (cleanupError) {
-          console.error('Erro ao limpar arquivo temporário:', cleanupError);
-        }
-        
-        if (error) {
-          console.error('Erro ao processar PDF:', stderr);
-          return res.status(500).json({ error: 'Falha ao processar PDF' });
-        }
+      // No endpoint /processar-pdf
+exec(`node extrair.js "${tempPdfPath}"`, async (error, stdout, stderr) => {
+  try {
+      await fs.remove(tempPdfPath);
+  } catch (cleanupError) {
+      console.error('Erro ao limpar arquivo temporário:', cleanupError);
+  }
+  
+  if (error) {
+      console.error('Erro ao processar PDF:', stderr);
+      return res.status(500).json({ error: 'Falha ao processar PDF' });
+  }
 
-        try {
-          const mensagens = await fs.readJson(path.join(__dirname, 'mensagem.json'));
-          res.json({ success: true, mensagens });
-          console.log(`Arquivo criado em: ${mensagens}`);
-        } catch (readError) {
-          res.status(500).json({ error: 'Erro ao ler mensagens geradas' });
-        }
-      });
+  console.log('Saída do extrair.js:', stdout);
+  
+  try {
+      const mensagemPath = path.join(__dirname, 'mensagem.json');
+      console.log('Tentando ler:', mensagemPath);
+      console.log('Conteúdo do diretório:', fs.readdirSync(__dirname));
+      
+      const mensagens = await fs.readJson(mensagemPath);
+      console.log('Mensagens lidas com sucesso:', mensagens.length);
+      
+      res.json({ success: true, mensagens });
+  } catch (readError) {
+      console.error('Erro ao ler mensagem.json:', readError);
+      res.status(500).json({ error: 'Erro ao ler mensagens geradas' });
+  }
+});
     } catch (downloadError) {
       console.error('Erro ao baixar PDF:', downloadError);
       return res.status(500).json({ error: 'Falha ao baixar PDF da URL fornecida' });
