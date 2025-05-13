@@ -8,8 +8,4 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 RUN npm ci
 COPY . .
-
-# Apenas garante que o arquivo pode ser criado em runtime
-USER pptruser
-
 CMD [ "node", "api.js" ]
