@@ -87,9 +87,13 @@ app.post('/enviar-mensagens', async (req, res) => {
     }
 
     const mensagemPath = path.join(__dirname, 'mensagem_selecionados.json');
+    
+    // Garante que o arquivo existe e tem permissões
+    await fs.ensureFile(mensagemPath);
     await fs.writeJson(mensagemPath, pacientes);
     
-    const child = exec('node whatsapp.js mensagem_selecionados.json', 
+    // Usa caminho absoluto para o whatsapp.js
+    const child = exec(`node ${path.join(__dirname, 'whatsapp.js')} ${mensagemPath}`, 
       (error, stdout, stderr) => {
         if (error) {
           console.error('Erro ao enviar mensagens:', stderr);
