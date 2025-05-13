@@ -86,7 +86,13 @@ app.post('/enviar-mensagens', async (req, res) => {
       return res.status(400).json({ error: 'Dados de pacientes inválidos' });
     }
 
-    const mensagemPath = path.join(__dirname, 'mensagem_selecionados.json');
+    const mensagemPath = '/usr/src/app/mensagem_selecionados.json';
+    try {
+      await fs.access(mensagemPath);
+    } catch {
+      await fs.writeJson(mensagemPath, []);
+    }
+
     await fs.writeJson(mensagemPath, pacientes);
     
     const child = exec('node whatsapp.js mensagem_selecionados.json', 
