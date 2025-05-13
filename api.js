@@ -2,7 +2,6 @@ const express = require('express');
 const { exec } = require('child_process');
 const path = require('path');
 const fs = require('fs-extra');
-const axios = require('axios'); // Adicione esta linha
 const app = express();
 
 app.use(express.json());
@@ -18,66 +17,36 @@ app.use((req, res, next) => {
 // Rota para processar PDF
 app.post('/processar-pdf', async (req, res) => {
   try {
-    const { pdfUrl } = req.body;
+    const { pdfPath } = req.body;
     
-    if (!pdfUrl) {
-      return res.status(400).json({ error: 'URL do PDF não fornecida' });
+    if (!pdfPath) {
+      return res.status(400).json({ error: 'Caminho do PDF não fornecido' });
     }
 
-    // Cria uma pasta temporária se não existir
-    const tempDir = path.join(__dirname, 'temp');
-    await fs.ensureDir(tempDir);
+    const fullPath = path.join(__dirname, '..', pdfPath);
     
-    // Define o caminho para o arquivo temporário
-    const tempPdfPath = path.join(tempDir, `temp_${Date.now()}.pdf`);
-    
-    try {
-      // Faz o download do PDF
-      const response = await axios({
-        method: 'get',
-        url: pdfUrl,
-        responseType: 'stream'
-      });
-      
-      const writer = fs.createWriteStream(tempPdfPath);
-      response.data.pipe(writer);
-      
-      await new Promise((resolve, reject) => {
-        writer.on('finish', resolve);
-        writer.on('error', reject);
-      });
-      
-      // Processa o PDF
-      exec(`node extrair.js "${tempPdfPath}"`, async (error, stdout, stderr) => {
-        // Limpa o arquivo temporário após o processamento
-        try {
-          await fs.remove(tempPdfPath);
-        } catch (cleanupError) {
-          console.error('Erro ao limpar arquivo temporário:', cleanupError);
-        }
-        
-        if (error) {
-          console.error('Erro ao processar PDF:', stderr);
-          return res.status(500).json({ error: 'Falha ao processar PDF' });
-        }
-
-        try {
-          const mensagens = await fs.readJson(path.join(__dirname, 'mensagem.json'));
-          res.json({ success: true, mensagens });
-        } catch (readError) {
-          res.status(500).json({ error: 'Erro ao ler mensagens geradas' });
-        }
-      });
-    } catch (downloadError) {
-      console.error('Erro ao baixar PDF:', downloadError);
-      return res.status(500).json({ error: 'Falha ao baixar PDF da URL fornecida' });
+    if (!await fs.pathExists(fullPath)) {
+      return res.status(404).json({ error: 'Arquivo PDF não encontrado' });
     }
+
+    exec(`node extrair.js "${fullPath}"`, async (error, stdout, stderr) => {
+      if (error) {
+        console.error('Erro ao processar PDF:', stderr);
+        return res.status(500).json({ error: 'Falha ao processar PDF' });
+      }
+
+      try {
+        const mensagens = await fs.readJson(path.join(__dirname, 'mensagem.json'));
+        res.json({ success: true, mensagens });
+      } catch (readError) {
+        res.status(500).json({ error: 'Erro ao ler mensagens geradas' });
+      }
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// Rota para enviar mensagens
 // Rota para enviar mensagens
 app.post('/enviar-mensagens', async (req, res) => {
   try {
@@ -90,32 +59,19 @@ app.post('/enviar-mensagens', async (req, res) => {
     const mensagemPath = path.join(__dirname, 'mensagem_selecionados.json');
     await fs.writeJson(mensagemPath, pacientes);
     
-    const child = exec('node whatsapp.js mensagem_selecionados.json', 
-      (error, stdout, stderr) => {
-        if (error) {
-          console.error('Erro ao enviar mensagens:', stderr);
-          return res.status(500).json({ 
-            error: 'Falha ao enviar mensagens',
-            details: stderr
-          });
-        }
-        
-        res.json({ 
-          success: true,
-          output: stdout,
-          message: `${pacientes.length} mensagens processadas`,
-          tipo: tipo_mensagem || 'confirmacao'
-        });
+    exec('node whatsapp.js mensagem_selecionados.json', (error, stdout, stderr) => {
+      if (error) {
+        console.error('Erro ao enviar mensagens:', stderr);
+        return res.status(500).json({ error: 'Falha ao enviar mensagens' });
+      }
+      
+      res.json({ 
+        success: true,
+        output: stdout,
+        message: `${pacientes.length} mensagens processadas`,
+        tipo: tipo_mensagem || 'confirmacao'
+      });
     });
-
-    // Captura logs em tempo real
-    child.stdout.on('data', (data) => {
-      console.log(`WhatsApp: ${data}`);
-    });
-    child.stderr.on('data', (data) => {
-      console.error(`WhatsApp ERROR: ${data}`);
-    });
-
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
