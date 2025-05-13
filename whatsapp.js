@@ -5,17 +5,6 @@ require("dotenv").config();
 (async () => {
   let browser;
   try {
-    const chromePath = '/opt/render/.cache/puppeteer/chrome/linux-136.0.7103.92/chrome-linux64/chrome';
-    
-    console.log('Verificando caminho do Chrome...');
-    try {
-      await fs.access(chromePath, fs.constants.F_OK);
-      console.log(`Chrome encontrado em: ${chromePath}`);
-    } catch {
-      console.log('Chrome não encontrado, listando diretório:');
-      console.log(await fs.readdir('/opt/render/.cache/puppeteer/chrome/linux-136.0.7103.92/'));
-    }
-
     const browser = await puppeteer.launch({
       args: [
         "--disable-setuid-sandbox",
