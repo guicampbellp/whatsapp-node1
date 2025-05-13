@@ -14,7 +14,8 @@ app.use((req, res, next) => {
   res.header('Access-Control-Allow-Headers', 'Content-Type');
   next();
 });
-
+console.log(`Diretório de trabalho atual: ${__dirname}`);
+console.log(`Conteúdo do diretório:`, fs.readdirSync(__dirname));
 // Rota para processar PDF
 app.post('/processar-pdf', async (req, res) => {
   try {
@@ -64,6 +65,7 @@ app.post('/processar-pdf', async (req, res) => {
         try {
           const mensagens = await fs.readJson(path.join(__dirname, 'mensagem.json'));
           res.json({ success: true, mensagens });
+          console.log(`Arquivo criado em: ${mensagens}`);
         } catch (readError) {
           res.status(500).json({ error: 'Erro ao ler mensagens geradas' });
         }
