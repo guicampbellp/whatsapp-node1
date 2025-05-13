@@ -21,8 +21,8 @@ const fs = require("fs-extra");
     // Configurações para ambiente de produção
     const isProduction = process.env.NODE_ENV === 'production';
     
-    browser = await puppeteer.launch({
-      headless: true,
+    const browser = await puppeteer.launch({
+      headless: 'new', // Usa o novo modo headless
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
@@ -34,7 +34,7 @@ const fs = require("fs-extra");
         "--single-process"
       ],
       executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || 
-        (isProduction ? null : "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"),
+        (isProduction ? '/usr/bin/chromium' : "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"),
       ignoreDefaultArgs: ["--enable-automation"],
     });
 

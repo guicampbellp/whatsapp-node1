@@ -3,7 +3,16 @@ FROM node:18-slim
 # Instala as dependências necessárias para o Chromium
 RUN apt-get update && \
     apt-get install -y \
+    wget \
+    gnupg \
+    && echo "deb http://ftp.debian.org/debian buster main" >> /etc/apt/sources.list \
+    && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys DCC9EFBF77E11517 \
+    && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 648ACFD622F3D138 \
+    && apt-get update && \
+    apt-get install -y \
     chromium \
+    chromium-common \
+    chromium-driver \
     fonts-liberation \
     libasound2 \
     libatk-bridge2.0-0 \
