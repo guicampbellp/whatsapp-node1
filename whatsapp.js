@@ -18,11 +18,11 @@ const fs = require("fs-extra");
       return;
     }
 
-    // Configurações para ambiente de produção (Render)
+    // Configurações para ambiente de produção
     const isProduction = process.env.NODE_ENV === 'production';
     
     browser = await puppeteer.launch({
-      headless: isProduction, // true no Render, false localmente
+      headless: true,
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
@@ -31,12 +31,10 @@ const fs = require("fs-extra");
         "--no-first-run",
         "--no-zygote",
         "--disable-gpu",
-        "--single-process" // Para ambientes com recursos limitados
+        "--single-process"
       ],
-      executablePath: isProduction 
-  ? await puppeteer.executablePath()
-  : "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
-      userDataDir: "./user_data",
+      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || 
+        (isProduction ? null : "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"),
       ignoreDefaultArgs: ["--enable-automation"],
     });
 
