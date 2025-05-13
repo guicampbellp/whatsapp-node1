@@ -4,7 +4,9 @@
   "main": "api.js",
   "scripts": {
     "start": "node api.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "test-chromium": "node test-chromium.js",
+    "prestart": "npm run test-chromium"
   },
   "dependencies": {
     "axios": "^1.9.0",

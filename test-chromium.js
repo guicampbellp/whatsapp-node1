@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-console.log('Verificando instalação do Chromium...');
+console.log('===== INÍCIO DO TESTE DO CHROMIUM =====');
 
 const paths = [
   '/usr/bin/chromium',
@@ -22,4 +22,4 @@ paths.forEach(path => {
   }
 });
 
-console.log('Processo concluído');
+console.log('===== FIM DO TESTE DO CHROMIUM =====');
