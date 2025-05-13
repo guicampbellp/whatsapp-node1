@@ -1,18 +1,13 @@
 FROM node:18-slim
 
-# Instala as dependências necessárias para o Chromium
-RUN apt-get update && \
+# 1. Instala dependências do sistema
+RUN apt-get update && apt-get install -y \
+    wget gnupg && \
+    wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - && \
+    echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list && \
+    apt-get update && \
     apt-get install -y \
-    wget \
-    gnupg \
-    && echo "deb http://ftp.debian.org/debian buster main" >> /etc/apt/sources.list \
-    && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys DCC9EFBF77E11517 \
-    && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 648ACFD622F3D138 \
-    && apt-get update && \
-    apt-get install -y \
-    chromium \
-    chromium-common \
-    chromium-driver \
+    google-chrome-stable \
     fonts-liberation \
     libasound2 \
     libatk-bridge2.0-0 \
@@ -40,8 +35,11 @@ RUN apt-get update && \
     libxext6 \
     libxfixes3 \
     libxrandr2 \
-    libxshmfence1 \
-    && rm -rf /var/lib/apt/lists/*
+    libxshmfence1 && \
+    rm -rf /var/lib/apt/lists/*
+
+# 2. Cria link simbólico para o Chrome instalado
+RUN ln -s /usr/bin/google-chrome-stable /usr/bin/chromium
 
 WORKDIR /app
 
@@ -51,7 +49,7 @@ RUN npm install
 
 COPY . .
 
-# Configurações de ambiente
+# 3. Configurações de ambiente
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV NODE_ENV=production
