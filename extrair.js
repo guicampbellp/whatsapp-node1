@@ -60,17 +60,8 @@ async function extrairConsultas() {
             }
         }
 
-        const jsonContent = JSON.stringify(consultas, null, 4);
-        
-        // Escreve o arquivo de forma síncrona para garantir conclusão
-        fs.writeFileSync("mensagem.json", jsonContent);
+        fs.writeFileSync("mensagem.json", JSON.stringify(consultas, null, 4));
         console.log(`Arquivo mensagem.json criado com ${consultas.length} consultas.`);
-
-        // Verifica imediatamente se o arquivo foi escrito corretamente
-        const writtenData = fs.readFileSync("mensagem.json", 'utf8');
-        if (!writtenData) {
-            throw new Error('Falha ao escrever mensagem.json - arquivo vazio');
-        }
         
         if (consultas.length > 0) {
             console.log("\nExemplo de mensagem gerada:");
