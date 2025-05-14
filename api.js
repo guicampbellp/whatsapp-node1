@@ -50,34 +50,54 @@ app.post('/processar-pdf', async (req, res) => {
       
       // Processa o PDF
       // No endpoint /processar-pdf
-exec(`node extrair.js "${tempPdfPath}"`, async (error, stdout, stderr) => {
-  try {
-      await fs.remove(tempPdfPath);
-  } catch (cleanupError) {
-      console.error('Erro ao limpar arquivo temporário:', cleanupError);
-  }
-  
-  if (error) {
-      console.error('Erro ao processar PDF:', stderr);
-      return res.status(500).json({ error: 'Falha ao processar PDF' });
-  }
-
-  console.log('Saída do extrair.js:', stdout);
-  
-  try {
-      const mensagemPath = path.join(__dirname, 'mensagem.json');
-      console.log('Tentando ler:', mensagemPath);
-      console.log('Conteúdo do diretório:', fs.readdirSync(__dirname));
-      
-      const mensagens = await fs.readJson(mensagemPath);
-      console.log('Mensagens lidas com sucesso:', mensagens.length);
-      
-      res.json({ success: true, mensagens });
-  } catch (readError) {
-      console.error('Erro ao ler mensagem.json:', readError);
-      res.status(500).json({ error: 'Erro ao ler mensagens geradas' });
-  }
-});
+      exec(`node extrair.js "${tempPdfPath}"`, async (error, stdout, stderr) => {
+        try {
+            await fs.remove(tempPdfPath);
+            
+            if (error) {
+                console.error('Erro ao processar PDF:', stderr);
+                return res.status(500).json({ error: 'Falha ao processar PDF: ' + stderr });
+            }
+    
+            // Aguarda um pouco e verifica se o arquivo foi criado
+            let attempts = 0;
+            let fileExists = false;
+            const mensagemPath = path.join(__dirname, 'mensagem.json');
+            
+            while (attempts < 5 && !fileExists) {
+                await new Promise(resolve => setTimeout(resolve, 500));
+                fileExists = fs.existsSync(mensagemPath);
+                attempts++;
+            }
+    
+            if (!fileExists) {
+                throw new Error('Arquivo mensagem.json não foi criado após processamento');
+            }
+    
+            // Lê e valida o conteúdo
+            const rawData = fs.readFileSync(mensagemPath, 'utf8').trim();
+            if (!rawData) {
+                throw new Error('Arquivo mensagem.json está vazio');
+            }
+    
+            const mensagens = JSON.parse(rawData);
+            await fs.remove(mensagemPath); // Limpeza
+            
+            if (!Array.isArray(mensagens)) {
+                throw new Error('Formato inválido das mensagens geradas');
+            }
+    
+            res.json({ success: true, mensagens });
+        } catch (err) {
+            console.error('Erro ao processar resultado:', err);
+            try {
+                await fs.remove(mensagemPath); // Tenta limpar se existir
+            } catch (cleanupError) {
+                console.error('Erro na limpeza:', cleanupError);
+            }
+            res.status(500).json({ error: 'Erro ao processar mensagens: ' + err.message });
+        }
+    });
     } catch (downloadError) {
       console.error('Erro ao baixar PDF:', downloadError);
       return res.status(500).json({ error: 'Falha ao baixar PDF da URL fornecida' });
