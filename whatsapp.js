@@ -13,18 +13,22 @@ require("dotenv").config();
     const contatos = await fs.readJson(contatosPath);
     console.log(`Total de contatos a processar: ${contatos.length}`);
 
-    // Configuração do Puppeteer
+    // Configuração do Puppeteer para Docker
     console.log("Iniciando navegador...");
     browser = await puppeteer.launch({
       headless: true,
+      executablePath: '/usr/bin/google-chrome',
       args: [
-        "--disable-setuid-sandbox",
-        "--no-sandbox",
-        "--single-process",
-        "--no-zygote",
-        "--disable-dev-shm-usage"
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-accelerated-2d-canvas',
+        '--no-first-run',
+        '--no-zygote',
+        '--single-process',
+        '--disable-gpu'
       ],
-      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || puppeteer.executablePath(),
+      ignoreHTTPSErrors: true
     });
 
     const page = await browser.newPage();
