@@ -59,9 +59,10 @@ async function extrairConsultas() {
                 }
             }
         }
-
-        fs.writeFileSync("mensagem.json", JSON.stringify(consultas, null, 4));
-        console.log(`Arquivo mensagem.json criado com ${consultas.length} consultas.`);
+// No final da função extrairConsultas(), modifique:
+            const mensagemPath = path.join(__dirname, 'mensagem.json');
+            fs.writeFileSync(mensagemPath, JSON.stringify(consultas, null, 4));
+            console.log(`Arquivo criado em: ${mensagemPath}`);
         
         if (consultas.length > 0) {
             console.log("\nExemplo de mensagem gerada:");
