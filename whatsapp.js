@@ -17,14 +17,13 @@ require("dotenv").config();
     console.log("Iniciando navegador...");
     browser = await puppeteer.launch({
       headless: true,
-      args: [
-        "--disable-setuid-sandbox",
-        "--no-sandbox",
-        "--single-process",
-        "--no-zygote",
-        "--disable-dev-shm-usage"
-      ],
-      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || puppeteer.executablePath(),
+   ignoreDefaultArgs: ["--disable-extensions"],
+   args:[
+    "--no-sandbox",
+    "--use-gl=egl",
+    "--disable-setuid-sandbox",
+   ],
+   ignoreHTTPSErrors:true,
     });
 
     const page = await browser.newPage();
