@@ -19,6 +19,7 @@ console.log(`Conteúdo do diretório:`, fs.readdirSync(__dirname));
 console.log('Versão do Node:', process.version);
 console.log('Plataforma:', process.platform);
 // Rota para processar PDF
+// Manter apenas a parte de processamento de PDF e remover a parte de envio de mensagens
 app.post('/processar-pdf', async (req, res) => {
   try {
     console.log('Recebida requisição para processar PDF');
@@ -102,62 +103,4 @@ app.post('/processar-pdf', async (req, res) => {
   }
 });
 
-// Rota para enviar mensagens
-app.post('/enviar-mensagens', async (req, res) => {
-  try {
-    console.log('Recebida requisição para enviar mensagens');
-    const { pacientes, tipo_mensagem } = req.body;
-    
-    if (!pacientes || !Array.isArray(pacientes)) {
-      console.log('Dados de pacientes inválidos');
-      return res.status(400).json({ error: 'Dados de pacientes inválidos' });
-    }
-
-    const mensagemPath = path.join(__dirname, 'mensagem_selecionados.json');
-    console.log(`Salvando pacientes selecionados em: ${mensagemPath}`);
-    await fs.writeJson(mensagemPath, pacientes);
-    
-    console.log('Iniciando processo de envio...');
-    const child = exec('node whatsapp.js mensagem_selecionados.json', 
-      { timeout: 300000 }, // 5 minutos de timeout
-      (error, stdout, stderr) => {
-        console.log('Processo de envio finalizado');
-        console.log('stdout:', stdout);
-        console.log('stderr:', stderr);
-        
-        if (error) {
-          console.error('Erro no processo de envio:', error);
-          return res.status(500).json({ 
-            error: 'Falha ao enviar mensagens',
-            details: stderr || error.message
-          });
-        }
-        
-        res.json({ 
-          success: true,
-          output: stdout,
-          message: `${pacientes.length} mensagens processadas`,
-          tipo: tipo_mensagem || 'confirmacao'
-        });
-    });
-    
-    // Logs em tempo real do processo filho
-    child.stdout.on('data', (data) => {
-      console.log(`[whatsapp.js] ${data}`);
-    });
-    
-    child.stderr.on('data', (data) => {
-      console.error(`[whatsapp.js ERROR] ${data}`);
-    });
-    
-  } catch (err) {
-    console.error('Erro no endpoint de envio:', err);
-    res.status(500).json({ 
-      error: err.message,
-      stack: err.stack 
-    });
-  }
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`API rodando na porta ${PORT}`));
+// Remover completamente a rota /enviar-mensagens
