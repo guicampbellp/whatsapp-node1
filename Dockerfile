@@ -15,3 +15,4 @@ RUN chown -R pptruser:pptruser /usr/src/app && \
 
 USER pptruser
 CMD [ "node", "api.js" ]
+
