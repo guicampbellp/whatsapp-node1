@@ -4,15 +4,7 @@ const path = require("path");
 require("dotenv").config();
 
 (async () => {
-const browser = await puppeteer.launch({
-  headless: 'new',
-  args: [
-    "--disable-setuid-sandbox",
-    "--no-sandbox",
-    "--single-process",
-    "--no-zygote"
-  ]
-});
+  let browser;
   try {
     // Carrega os contatos do arquivo
     const contatosPath = path.resolve(process.argv[2] || 'mensagem_selecionados.json');
@@ -23,7 +15,18 @@ const browser = await puppeteer.launch({
 
     // Configuração do Puppeteer
     console.log("Iniciando navegador...");
-
+      const browser = await puppeteer.launch({
+    args: [
+      "--disable-setuid-sandbox",
+      "--no-sandbox",
+      "--single-process",
+      "--no-zygote",
+    ],
+    executablePath:
+      process.env.NODE_ENV === "production"
+        ? process.env.PUPPETEER_EXECUTABLE_PATH
+        : puppeteer.executablePath(),
+  });
 
     const page = await browser.newPage();
     await page.setDefaultNavigationTimeout(120000);
