@@ -19,7 +19,6 @@ console.log(`Conteúdo do diretório:`, fs.readdirSync(__dirname));
 console.log('Versão do Node:', process.version);
 console.log('Plataforma:', process.platform);
 // Rota para processar PDF
-// Manter apenas a parte de processamento de PDF e remover a parte de envio de mensagens
 app.post('/processar-pdf', async (req, res) => {
   try {
     console.log('Recebida requisição para processar PDF');
@@ -103,4 +102,7 @@ app.post('/processar-pdf', async (req, res) => {
   }
 });
 
-// Remover completamente a rota /enviar-mensagens
+// Rota para enviar mensagens
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`API rodando na porta ${PORT}`));
