@@ -15,6 +15,13 @@ async function extrairConsultas() {
         
         const consultas = [];
         
+        // Extrair informações da unidade e profissional
+        const infoUnidade = texto.match(/USF\s+([^\n]+)/);
+        const unidade = infoUnidade ? infoUnidade[0].trim() : 'Unidade não identificada';
+        
+        const infoProfissional = texto.match(/Profissional\s+([^\n]+)/);
+        const profissional = infoProfissional ? infoProfissional[1].trim() : 'Profissional não identificado';
+        
         // Padrão regex ajustado para o formato específico
         const padraoConsulta = /(\d{2}\/\d{2}\/\d{4})\s*(\d{2}:\d{2})\s*([A-Z][A-Z\s]+?[A-Z])\s*(?:PUERICULTURA|CLINICA MEDICA|PEDIATRIA|PRE NATAL|PRE NATAL PRIMEIRA CONSULTA|CONSULTA ENFERMAGEM|CONSULTA).*?Telefones do paciente:\s*([^\n]+)/gs;
         
@@ -47,24 +54,29 @@ async function extrairConsultas() {
                         telefone: telFormatado,
                         mensagem: `Mensagem Automática - Confirmação de Consulta\n\n` +
                                   `Olá, ${nomeFormatado}!\n\n` +
-                                  `Este é um lembrete da sua consulta no Posto de saúde do Guapiranga.\n\n` +
+                                  `Este é um lembrete da sua consulta na ${unidade} com ${profissional}.\n\n` +
                                   `📅 Data: ${data}\n` +
                                   `⏰ Horário: ${hora}\n\n` +
                                   `Por favor, confirme sua presença respondendo com:\n` +
                                   `✅ 1 para Sim, estarei presente\n` +
                                   `❌ 2 para Não poderei comparecer\n\n` +
                                   `A sua confirmação é muito importante para melhor organização do atendimento.\n\n` +
-                                  `Agradecemos sua atenção!`
+                                  `Agradecemos sua atenção!`,
+                        unidade: unidade,
+                        profissional: profissional
                     });
                 }
             }
         }
-// No final da função extrairConsultas(), modifique:
-            const mensagemPath = path.join(__dirname, 'mensagem.json');
-            fs.writeFileSync(mensagemPath, JSON.stringify(consultas, null, 4));
-            console.log(`Arquivo criado em: ${mensagemPath}`);
+
+        const mensagemPath = path.join(__dirname, 'mensagem.json');
+        fs.writeFileSync(mensagemPath, JSON.stringify(consultas, null, 4));
+        console.log(`Arquivo criado em: ${mensagemPath}`);
         
         if (consultas.length > 0) {
+            console.log("\nInformações extraídas:");
+            console.log(`Unidade: ${unidade}`);
+            console.log(`Profissional: ${profissional}`);
             console.log("\nExemplo de mensagem gerada:");
             console.log(consultas[0].mensagem);
             console.log("\nPrimeiras 3 consultas extraídas:");
