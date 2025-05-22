@@ -4,18 +4,15 @@ const path = require("path");
 require("dotenv").config();
 
 (async () => {
-    const browser = await puppeteer.launch({
-    args: [
-      "--disable-setuid-sandbox",
-      "--no-sandbox",
-      "--single-process",
-      "--no-zygote",
-    ],
-    executablePath:
-      process.env.NODE_ENV === "production"
-        ? process.env.PUPPETEER_EXECUTABLE_PATH
-        : puppeteer.executablePath(),
-  });
+const browser = await puppeteer.launch({
+  headless: 'new',
+  args: [
+    "--disable-setuid-sandbox",
+    "--no-sandbox",
+    "--single-process",
+    "--no-zygote"
+  ]
+});
   try {
     // Carrega os contatos do arquivo
     const contatosPath = path.resolve(process.argv[2] || 'mensagem_selecionados.json');
