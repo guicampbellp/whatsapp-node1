@@ -16,7 +16,7 @@ require("dotenv").config();
     // Configuração do Puppeteer
     console.log("Iniciando navegador...");
       const browser = await puppeteer.launch({
-        headless: false, // Tenta forçar modo não-headless (pode não funcionar em cloud)
+        headless: true, // Tenta forçar modo não-headless (pode não funcionar em cloud)
     args: [
       "--disable-setuid-sandbox",
       "--no-sandbox",
