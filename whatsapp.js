@@ -4,7 +4,18 @@ const path = require("path");
 require("dotenv").config();
 
 (async () => {
-  let browser;
+    const browser = await puppeteer.launch({
+    args: [
+      "--disable-setuid-sandbox",
+      "--no-sandbox",
+      "--single-process",
+      "--no-zygote",
+    ],
+    executablePath:
+      process.env.NODE_ENV === "production"
+        ? process.env.PUPPETEER_EXECUTABLE_PATH
+        : puppeteer.executablePath(),
+  });
   try {
     // Carrega os contatos do arquivo
     const contatosPath = path.resolve(process.argv[2] || 'mensagem_selecionados.json');
@@ -15,16 +26,7 @@ require("dotenv").config();
 
     // Configuração do Puppeteer
     console.log("Iniciando navegador...");
-const browser = await puppeteer.launch({
-  args: [
-    "--disable-setuid-sandbox",
-    "--no-sandbox",
-    "--single-process",
-    "--no-zygote",
-  ],
-  // Remova a verificação de NODE_ENV e use diretamente o Chromium do Puppeteer
-  executablePath: puppeteer.executablePath()
-});
+
 
     const page = await browser.newPage();
     await page.setDefaultNavigationTimeout(120000);
