@@ -16,17 +16,17 @@ require("dotenv").config();
     // Configuração do Puppeteer
     console.log("Iniciando navegador...");
       const browser = await puppeteer.launch({
-    args: [
-      "--disable-setuid-sandbox",
-      "--no-sandbox",
-      "--single-process",
-      "--no-zygote",
-    ],
-    executablePath:
-      process.env.NODE_ENV === "production"
-        ? process.env.PUPPETEER_EXECUTABLE_PATH
-        : puppeteer.executablePath(),
-  });
+  headless: false, // Tenta forçar modo não-headless (pode não funcionar em cloud)
+  args: [
+    "--disable-setuid-sandbox",
+    "--no-sandbox",
+    "--single-process",
+    "--no-zygote",
+    "--disable-dev-shm-usage", // Importante para ambientes com pouca memória
+    "--remote-debugging-port=9222" // Permite debug remoto
+  ],
+  executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || puppeteer.executablePath()
+});
 
     const page = await browser.newPage();
     await page.setDefaultNavigationTimeout(120000);
