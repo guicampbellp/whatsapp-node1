@@ -53,39 +53,39 @@ app.post('/processar-pdf', async (req, res) => {
       });
       
       console.log('PDF baixado com sucesso, iniciando processamento...');
-      exec(`node extrair.js "${tempPdfPath}"`, async (error, stdout, stderr) => {
-        console.log('Processamento concluído, stdout:', stdout);
-        console.log('stderr:', stderr);
-        
-        try {
-          await fs.remove(tempPdfPath);
-          console.log('Arquivo temporário removido');
-        } catch (cleanupError) {
-          console.error('Erro ao limpar arquivo temporário:', cleanupError);
-        }
-        
-        if (error) {
-          console.error('Erro ao processar PDF:', stderr);
-          return res.status(500).json({ error: 'Falha ao processar PDF', details: stderr });
-        }
+exec(`node extrair.js "${tempPdfPath}" "${sessionId}"`, async (error, stdout, stderr) => {
+    console.log('Processamento concluído, stdout:', stdout);
+    console.log('stderr:', stderr);
+    
+    try {
+        await fs.remove(tempPdfPath);
+        console.log('Arquivo temporário removido');
+    } catch (cleanupError) {
+        console.error('Erro ao limpar arquivo temporário:', cleanupError);
+    }
+    
+    if (error) {
+        console.error('Erro ao processar PDF:', stderr);
+        return res.status(500).json({ error: 'Falha ao processar PDF', details: stderr });
+    }
 
-        try {
-          const mensagemPath = path.join(__dirname, `mensagem_${sessionId}.json`);
-          console.log(`Tentando ler arquivo: ${mensagemPath}`);
-          console.log('Conteúdo do diretório:', await fs.readdir(__dirname));
-          
-          const mensagens = await fs.readJson(mensagemPath);
-          console.log(`Mensagens lidas: ${mensagens.length}`);
-          res.json({ success: true, mensagens });
-        } catch (readError) {
-          console.error('Erro ao ler mensagens:', readError);
-          res.status(500).json({ 
+    try {
+        const mensagemPath = path.join(__dirname, `mensagem_${sessionId}.json`);
+        console.log(`Tentando ler arquivo: ${mensagemPath}`);
+        console.log('Conteúdo do diretório:', await fs.readdir(__dirname));
+        
+        const mensagens = await fs.readJson(mensagemPath);
+        console.log(`Mensagens lidas: ${mensagens.length}`);
+        res.json({ success: true, mensagens });
+    } catch (readError) {
+        console.error('Erro ao ler mensagens:', readError);
+        res.status(500).json({ 
             error: 'Erro ao ler mensagens geradas',
             details: readError.message,
             directoryContent: await fs.readdir(__dirname).catch(e => e.message)
-          });
-        }
-      });
+        });
+    }
+});
     } catch (downloadError) {
       console.error('Erro ao baixar PDF:', downloadError);
       return res.status(500).json({ 

@@ -3,6 +3,7 @@ const pdf = require("pdf-parse");
 const path = require("path");
 
 const pdfPath = process.argv[2];
+const sessionId = process.argv[3]; // Recebe o sessionId como terceiro argumento
 
 async function extrairConsultas() {
     try {
@@ -69,10 +70,9 @@ async function extrairConsultas() {
             }
         }
 
-         const mensagemPath = path.join(__dirname, `mensagem_${sessionId}.json`);
-    fs.writeFileSync(mensagemPath, JSON.stringify(consultas, null, 4));
-    console.log(`Arquivo criado em: ${mensagemPath}`);
-;
+        const mensagemPath = path.join(__dirname, `mensagem_${sessionId}.json`);
+        fs.writeFileSync(mensagemPath, JSON.stringify(consultas, null, 4));
+        console.log(`Arquivo criado em: ${mensagemPath}`);
         
         if (consultas.length > 0) {
             console.log("\nInformações extraídas:");
