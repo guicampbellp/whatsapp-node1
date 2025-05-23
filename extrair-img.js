@@ -26,54 +26,52 @@ async function extrairConsultasDaImagem() {
         const profissional = infoProfissional ? infoProfissional[1].trim() : 'Profissional não identificado';
         
         // Padrão regex ajustado para o formato específico da imagem
-        const padraoConsulta = /Data Consulta:\s*(\d{2}\/\d{2}\/\d{4}).*?Horas\s*\((\d{2}:\d{2})\).*?Tipo Atendimento:\s*([^\n]+).*?Mascimentos:\s*(\d{2}\/\d{2}\/\d{4}).*?Telefones do paciente\s*(?:\(\d+\)\s*\d+[\d\s-]*)/gs;
+        const padraoConsulta = /Data Consulta:\s*(\d{2}\/\d{2}\/\d{4}).*?Hora:\s*(\d{2}:\d{2}).*?Tipo Atendimento:\s*([^\n]+).*?Paciente:\s*([^\n]+)\s*Nascimento:\s*(\d{2}\/\d{2}\/\d{4}).*?Telefones do paciente:\s*([^\n]+)/gs;
         
         let match;
         while ((match = padraoConsulta.exec(text)) !== null) {
             const data = match[1];
             const hora = match[2];
             const tipoAtendimento = match[3].trim();
-            const dataNascimento = match[4];
+            const nomePaciente = match[4].trim();
+            const dataNascimento = match[5];
+            const telefones = match[6];
             
-            // Encontra o telefone - padrão específico para a imagem
-            const telefoneMatch = text.substr(match.index).match(/Telefones do paciente\s*(?:\(\d+\)\s*[\d-]+)/);
-            const telefone = telefoneMatch ? telefoneMatch[0].replace(/[^\d]/g, '') : '';
+            // Extrai todos os números de telefone
+            const tels = telefones.match(/\(\d+\)\s*\d+[\d\s-]*/g) || [];
             
-            // Extrai o nome do responsável (se disponível)
-            const responsavelMatch = text.substr(match.index).match(/Responsável:\s*([^\n]+)/);
-            const responsavel = responsavelMatch ? responsavelMatch[1].trim() : '';
-            
-            // Formata o nome para a mensagem (pega as primeiras partes do nome)
-            let nomeFormatado = responsavel;
-            if (responsavel) {
-                const partesNome = responsavel.split(' ');
-                if (partesNome.length >= 2) {
-                    if (['de', 'da', 'dos', 'das'].includes(partesNome[1].toLowerCase())) {
-                        nomeFormatado = partesNome.slice(0, 3).join(' ');
-                    } else {
-                        nomeFormatado = partesNome.slice(0, 2).join(' ');
+            for (const tel of tels) {
+                const telFormatado = tel.replace(/[^\d]/g, '');
+                if (telFormatado.length >= 10) {
+                    // Formata o nome para a mensagem (pega as primeiras partes do nome)
+                    let nomeFormatado = nomePaciente;
+                    const partesNome = nomePaciente.split(' ');
+                    if (partesNome.length >= 2) {
+                        if (['de', 'da', 'dos', 'das'].includes(partesNome[1].toLowerCase())) {
+                            nomeFormatado = partesNome.slice(0, 3).join(' ');
+                        } else {
+                            nomeFormatado = partesNome.slice(0, 2).join(' ');
+                        }
                     }
+                    
+                    consultas.push({
+                        telefone: telFormatado,
+                        mensagem: `Mensagem Automática - Confirmação de Consulta\n\n` +
+                                  `Olá, ${nomeFormatado || 'paciente'}!\n\n` +
+                                  `Este é um lembrete da sua consulta na ${unidade} com ${profissional}.\n\n` +
+                                  `📅 Data: ${data}\n` +
+                                  `⏰ Horário: ${hora}\n` +
+                                  `📋 Tipo: ${tipoAtendimento}\n\n` +
+                                  `Por favor, confirme sua presença respondendo com:\n` +
+                                  `✅ 1 para Sim, estarei presente\n` +
+                                  `❌ 2 para Não poderei comparecer\n\n` +
+                                  `A sua confirmação é muito importante para melhor organização do atendimento.\n\n` +
+                                  `Agradecemos sua atenção!`,
+                        unidade: unidade,
+                        profissional: profissional,
+                        dataNascimento: dataNascimento
+                    });
                 }
-            }
-            
-            if (telefone.length >= 10) {
-                consultas.push({
-                    telefone: telefone,
-                    mensagem: `Mensagem Automática - Confirmação de Consulta\n\n` +
-                              `Olá, ${nomeFormatado || 'paciente'}!\n\n` +
-                              `Este é um lembrete da sua consulta na ${unidade} com ${profissional}.\n\n` +
-                              `📅 Data: ${data}\n` +
-                              `⏰ Horário: ${hora}\n` +
-                              `📋 Tipo: ${tipoAtendimento}\n\n` +
-                              `Por favor, confirme sua presença respondendo com:\n` +
-                              `✅ 1 para Sim, estarei presente\n` +
-                              `❌ 2 para Não poderei comparecer\n\n` +
-                              `A sua confirmação é muito importante para melhor organização do atendimento.\n\n` +
-                              `Agradecemos sua atenção!`,
-                    unidade: unidade,
-                    profissional: profissional,
-                    dataNascimento: dataNascimento
-                });
             }
         }
 
