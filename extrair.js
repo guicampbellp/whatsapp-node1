@@ -69,23 +69,29 @@ async function extrairConsultas() {
             }
         }
 
-        const mensagemPath = path.join(__dirname, 'mensagem.json');
-        fs.writeFileSync(mensagemPath, JSON.stringify(consultas, null, 4));
-        console.log(`Arquivo criado em: ${mensagemPath}`);
-        
-        if (consultas.length > 0) {
-            console.log("\nInformações extraídas:");
-            console.log(`Unidade: ${unidade}`);
-            console.log(`Profissional: ${profissional}`);
-            console.log("\nExemplo de mensagem gerada:");
-            console.log(consultas[0].mensagem);
-            console.log("\nPrimeiras 3 consultas extraídas:");
-            consultas.slice(0, 3).forEach((consulta, index) => {
-                console.log(`${index + 1}. Telefone: ${consulta.telefone}`);
-            });
-        } else {
-            console.log("Nenhuma consulta encontrada - verifique debug_pdf_text.txt");
-        }
+        const resultado = {
+    success: true,
+    mensagens: consultas,
+    unidade: unidade
+};
+
+console.log(`Arquivo criado em: ${mensagemPath}`);
+
+if (consultas.length > 0) {
+    console.log("\nInformações extraídas:");
+    console.log(`Unidade: ${unidade}`);
+    console.log(`Profissional: ${profissional}`);
+    console.log("\nExemplo de mensagem gerada:");
+    console.log(consultas[0].mensagem);
+    console.log("\nPrimeiras 3 consultas extraídas:");
+    consultas.slice(0, 3).forEach((consulta, index) => {
+        console.log(`${index + 1}. Telefone: ${consulta.telefone}`);
+    });
+} else {
+    console.log("Nenhuma consulta encontrada - verifique debug_pdf_text.txt");
+}
+
+res.json(resultado);
 
     } catch (err) {
         console.error("Erro ao processar o PDF:", err);
