@@ -22,7 +22,7 @@ console.log('Plataforma:', process.platform);
 app.post('/processar-pdf', async (req, res) => {
   try {
     console.log('Recebida requisição para processar PDF');
-    const { pdfUrl } = req.body;
+    const { pdfUrl, sessionId } = req.body;
     
     if (!pdfUrl) {
       console.log('URL do PDF não fornecida');
@@ -70,7 +70,7 @@ app.post('/processar-pdf', async (req, res) => {
         }
 
         try {
-          const mensagemPath = path.join(__dirname, 'mensagem.json');
+          const mensagemPath = path.join(__dirname, `mensagem_${sessionId}.json`);
           console.log(`Tentando ler arquivo: ${mensagemPath}`);
           console.log('Conteúdo do diretório:', await fs.readdir(__dirname));
           
