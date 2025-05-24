@@ -20,7 +20,7 @@ async function extrairConsultasDaImagem() {
         
         // Extrair informações da unidade e profissional
         const infoUnidade = text.match(/USF\s+([^\n]+)/);
-        const unidade = infoUnidade ? infoUnidade[0].trim() : 'Unidade não identificada';
+        const unidade = infoUnidade ? infoUnidade[0].trim() : 'Posto de saúde do Guapiranga';
         
         const infoProfissional = text.match(/Profissional\s+([^\n]+)/);
         const profissional = infoProfissional ? infoProfissional[1].trim() : 'Profissional não identificado';
@@ -58,10 +58,9 @@ async function extrairConsultasDaImagem() {
                         telefone: telFormatado,
                         mensagem: `Mensagem Automática - Confirmação de Consulta\n\n` +
                                   `Olá, ${nomeFormatado || 'paciente'}!\n\n` +
-                                  `Este é um lembrete da sua consulta na ${unidade} com ${profissional}.\n\n` +
+                                  `Este é um lembrete da sua consulta no ${unidade}.\n\n` +
                                   `📅 Data: ${data}\n` +
-                                  `⏰ Horário: ${hora}\n` +
-                                  `📋 Tipo: ${tipoAtendimento}\n\n` +
+                                  `⏰ Horário: ${hora}\n\n` +
                                   `Por favor, confirme sua presença respondendo com:\n` +
                                   `✅ 1 para Sim, estarei presente\n` +
                                   `❌ 2 para Não poderei comparecer\n\n` +
